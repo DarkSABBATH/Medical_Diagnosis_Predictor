@@ -1,0 +1,45 @@
+name: Train and Deploy Model
+on: [push]
+
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout code
+      - uses: actions/checkout@v4
+
+      # 2. Set up Python
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # 3. Install dependencies
+      - run: pip install -r ML_model/requirements.txt
+
+      # 4. Train model (generates medical_model.pkl)
+      - run: python ML_model/train_model.py
+
+      # 5. Upload model as artifact
+      - uses: actions/upload-artifact@v3
+        with:
+          name: model
+          path: deployment/medical_model.pkl
+
+  deploy:
+    needs: train
+    runs-on: ubuntu-latest
+    steps:
+      # 6. Download the trained model
+      - uses: actions/download-artifact@v3
+        with:
+          name: model
+
+      # 7. Push to repo (requires personal access token)
+      - run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add deployment/medical_model.pkl
+          git commit -m "Auto-update model"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
