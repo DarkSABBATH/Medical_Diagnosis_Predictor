@@ -19,22 +19,24 @@ jobs:
       # 4. Train model (generates medical_model.pkl)
       - run: python ML_model/train_model.py
 
-      # 5. Upload model as artifact
-      - uses: actions/upload-artifact@v3
+      # 5. Upload model as artifact (UPDATED TO v4+)
+      - uses: actions/upload-artifact@v4
         with:
-          name: model
+          name: medical-model
           path: deployment/medical_model.pkl
+          retention-days: 1  # Auto-deletes after 1 day to save space
 
   deploy:
     needs: train
     runs-on: ubuntu-latest
     steps:
-      # 6. Download the trained model
-      - uses: actions/download-artifact@v3
+      # 6. Download the trained model (UPDATED TO v4+)
+      - uses: actions/download-artifact@v4
         with:
-          name: model
+          name: medical-model
+          path: deployment/
 
-      # 7. Push to repo (requires personal access token)
+      # 7. Push to repo
       - run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
